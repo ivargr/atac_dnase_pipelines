@@ -9,7 +9,7 @@ CONDA_ENV=bds_atac
 
 ## build index or not
 
-BUILD_BWT2_IDX=1
+BUILD_BWT2_IDX=0
 BUILD_BWA_IDX=0
 
 ## show help

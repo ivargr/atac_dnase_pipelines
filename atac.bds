@@ -76,15 +76,16 @@ void main() { // atac pipeline starts here
 
 	chk_input( true_rep, false )
 
+	print("DO ALIGN")
 	do_align()
 
-	call_peaks()
+	#call_peaks()
 
-	read_input_peak() // if inputs are peaks, read them
+	#read_input_peak() // if inputs are peaks, read them
 
-	do_idr()
+	#do_idr()
 
-	ataqc()
+	#ataqc()
 
 	report()
 }
@@ -362,6 +363,7 @@ void do_align() {
 	//// distribute # threads for each replicate
 	nth_rep := distribute_nonzero( nth, filesize ) // distribute # threads according to input filesize
 
+	print("\n== Aligning...")
 	for (int rep=1; rep<=get_num_rep(); rep++) {
 
 		if ( no_par ) do_align( rep, nth_rep{rep} )
@@ -743,26 +745,29 @@ void align_PE( int rep, int nth_rep ) {
 		}
 		wait
 
-		string subsampled_tag_xcor
+		# Ivar: Skip sub sample correlation analysis now
+		if(false){
+			string subsampled_tag_xcor
 
-		if ( bedpe == "" ) {
-			subsampled_tag_xcor = subsample_tag_PE_xcor( tag, parse_number( subsample_xcor ), aln_o_dir, group )
+			if ( bedpe == "" ) {
+				subsampled_tag_xcor = subsample_tag_PE_xcor( tag, parse_number( subsample_xcor ), aln_o_dir, group )
+			}
+			else {
+				subsampled_tag_xcor = subsample_bedpe_to_tag_xcor( bedpe, parse_number( subsample_xcor ), aln_o_dir, group )
+			}
+			wait
+
+			// cross-corr. analysis
+			string xcor_qc_, xcor_plot_
+			( xcor_qc_, xcor_plot_ ) = xcor( subsampled_tag_xcor, qc_o_dir, group, nth_rep ) 
+
+			xcor_qc{rep} = xcor_qc_
+			xcor_plot{rep} = xcor_plot_
+
+			add_file_to_report( final_tag_, "tag-align", group, "Alignment/$long/Tag-align" )
+			add_file_to_table( xcor_plot_, "QC and logs/$long/Cross-corr. plot" )
 		}
-		else {
-			subsampled_tag_xcor = subsample_bedpe_to_tag_xcor( bedpe, parse_number( subsample_xcor ), aln_o_dir, group )
 		}
-		wait
-
-		// cross-corr. analysis
-		string xcor_qc_, xcor_plot_
-		( xcor_qc_, xcor_plot_ ) = xcor( subsampled_tag_xcor, qc_o_dir, group, nth_rep ) 
-
-		xcor_qc{rep} = xcor_qc_
-		xcor_plot{rep} = xcor_plot_
-
-		add_file_to_report( final_tag_, "tag-align", group, "Alignment/$long/Tag-align" )
-		add_file_to_table( xcor_plot_, "QC and logs/$long/Cross-corr. plot" )
-	}
 }
 
 void read_input_peak() {
@@ -1168,6 +1173,8 @@ string[] ataqc( string fastq1, string fastq2, string bam, string align_log, stri
 
 		// To prevent java heap space error (Exception in thread "main" java.lang.OutOfMemoryError: Java heap space)
 		sys export _JAVA_OPTIONS="-Xms256M -Xmx$max_java_heap -XX:ParallelGCThreads=1"
+		//sys export _JAVA_OPTIONS="-Xms256M -Xmx728M -XX:ParallelGCThreads=1"
+
 
 		sys cd $o_dir
 

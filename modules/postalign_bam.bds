@@ -162,7 +162,7 @@ string[] dedup_bam( string bam, string o_dir, string log_o_dir, string group, in
 
 			//# PBC File output
 			//# TotalReadPairs [tab] DistinctReadPairs [tab] OneReadPair [tab] TwoReadPairs [tab] NRF=Distinct/Total [tab] PBC1=OnePair/Distinct [tab] PBC2=OnePair/TwoPair
-			sys bedtools bamtobed -i $dupmark_bam | \
+			sys /cluster/software/VERSIONS/bedtools-2.17.0/bin/bedtools bamtobed -i $dupmark_bam | \
 				awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$6}' | \
 				grep -v 'chrM' | sort | uniq -c | \
 				awk 'BEGIN{mt=0;m0=0;m1=0;m2=0} ($1==1){m1=m1+1} ($1==2){m2=m2+1} {m0=m0+1} {mt=mt+$1} END{m1_m2=-1.0; if(m2>0) m1_m2=m1/m2; printf "%d\t%d\t%d\t%d\t%f\t%f\t%f\n",mt,m0,m1,m2,m0/mt,m1/m0,m1_m2}' > $pbc_qc
@@ -286,11 +286,14 @@ string[] dedup_bam_PE( string bam, string o_dir, string log_o_dir, string group,
 			//# Index final position sorted BAM
 			//# Create final name sorted BAM
 			//# ============================
+			sys sambamba --help			
+
 			sys samtools view -F 1804 -f 2 -b $dupmark_bam > $nodup_bam
 
 			sys sambamba index -t $nth_dedup $nodup_bam
 
 			sys sambamba flagstat -t $nth_dedup $nodup_bam > $map_qc
+			
 
 			//# =============================
 			//# Compute library complexity
@@ -303,10 +306,11 @@ string[] dedup_bam_PE( string bam, string o_dir, string log_o_dir, string group,
 			//# TotalReadPairs [tab] DistinctReadPairs [tab] OneReadPair [tab] TwoReadPairs [tab] NRF=Distinct/Total [tab] PBC1=OnePair/Distinct [tab] PBC2=OnePair/TwoPair
 			sys sambamba sort -t $nth_dedup -n $dupmark_bam -o $dupmark_bam.tmp.bam
 
-			sys bedtools bamtobed -bedpe -i $dupmark_bam.tmp.bam | \
+			//sys alias bedtools217="/cluster/software/VERSIONS/bedtools-2.17.0/bin/bedtools"
+			sys /cluster/software/VERSIONS/bedtools-2.17.0/bin/bedtools bamtobed -bedpe -i $dupmark_bam.tmp.bam | \
 				awk 'BEGIN{OFS="\t"}{print $1,$2,$4,$6,$9,$10}' | \
 				grep -v 'chrM' | sort | uniq -c | \
-				awk 'BEGIN{mt=0;m0=0;m1=0;m2=0} ($1==1){m1=m1+1} ($1==2){m2=m2+1} {m0=m0+1} {mt=mt+$1} END{m1_m2=-1.0; if(m2>0) m1_m2=m1/m2; printf "%d\t%d\t%d\t%d\t%f\t%f\t%f\n",mt,m0,m1,m2,m0/mt,m1/m0,m1_m2}' > $pbc_qc
+				awk 'BEGIN{mt=0;m0=0;m1=0;m2=0} ($1==1){m1=m1+1} ($1==2){m2=m2+1} {m0=m0+1} {mt=mt+$1} END{m1_m2=-1.0; if(m2>0) m1_m2=m1/m2; printf "%d\t%d\t%d\t%d\t%f\t%f\t%f\n",mt,m0,m1,m2,m0/(mt+1),m1/(m0+1),m1_m2}' > $pbc_qc
 			sys rm -f $dupmark_bam.tmp.bam
 
 			sys $shcmd_finalize
@@ -507,7 +511,7 @@ string bam_to_tag( string bam, string o_dir, string group ) {
 		sys $shcmd_init
 
 		//# Create SE tagAlign file
-		sys bedtools bamtobed -i $bam | awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";print $0}' | gzip -nc > $tag
+		sys /cluster/software/VERSIONS/bedtools-2.17.0/bin/bedtools bamtobed -i $bam | awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";print $0}' | gzip -nc > $tag
 
 		sys $RM_CHR_
 
@@ -544,7 +548,8 @@ string bam_to_bedpe( string bam, string o_dir, string group ) {
 			sys $shcmd_init
 
 			//# Create BEDPE file
-			sys bedtools bamtobed -bedpe -mate1 -i $nmsrt_bam | gzip -nc > $bedpe
+			//sys /cluster/software/VERSIONS/bedtools-2.17.0/bin/bedtools bamtobed -bedpe -mate1 -i $nmsrt_bam | gzip -nc > $bedpe
+			sys /cluster/software/VERSIONS/bedtools-2.17.0/bin/bedtools bamtobed -bedpe -i $nmsrt_bam | gzip -nc > $bedpe
 
 			sys $shcmd_finalize
 		}
@@ -573,12 +578,14 @@ string bedpe_to_tag( string bedpe, string o_dir, string group ) {
 	in 	:= [ bedpe ]
 	out 	:= tag
 
+	#breakpoint "Breakpoint 1\n"
 	taskName:= "bedpe_to_tag " + group
 
 	wait_par( cpus )
 
 	tid := task( out<-in ) {
 
+		
 		sys $shcmd_init
 
 		sys zcat $bedpe | awk 'BEGIN{OFS="\t"}{printf "%s\t%s\t%s\tN\t1000\t%s\n%s\t%s\t%s\tN\t1000\t%s\n",$1,$2,$3,$9,$4,$5,$6,$10}' | \
@@ -588,6 +595,7 @@ string bedpe_to_tag( string bedpe, string o_dir, string group ) {
 
 		sys $shcmd_finalize
 	}
+	#breakpoint "Breakpoint 2\n"
 
 	register_par( tid, cpus )
 

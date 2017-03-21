@@ -30,7 +30,7 @@ void init_align_bwt2() {
 
 void chk_align_bwt2() {
 
-	if ( !path_exists("$bwt2_idx.1.bt2") && !path_exists("$bwt2_idx.1.bt2l") ) {
+	if (false && !path_exists("$bwt2_idx.1.bt2") && !path_exists("$bwt2_idx.1.bt2l") ) {
 		error("Bowtie2 index (-bwt2_idx) doesn't exists! (file: $bwt2_idx.1.bt2 or $bwt2_idx.1.bt2l)\n")
 	}
 }
@@ -55,7 +55,11 @@ string[] bowtie2( string fastq, string o_dir, string log_o_dir, string group, in
 
 		sys $shcmd_init
 
+		/*
 		sys bowtie2 $param -x $bwt2_idx --threads $nth_bwt2 -U <(zcat -f $fastq) 2> $log | \
+			samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
+		*/
+	        sys hisat2 -p $nth_bwt2 -f -q -x /usit/abel/u1/ivargry/dev/hisat2/hg38/genome -U <(zcat -f $fastq) 2> $log | \
 			samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
 
 		sys $shcmd_finalize
@@ -127,13 +131,20 @@ string[] bowtie2_PE( string fastq1, string fastq2, string o_dir, string log_o_di
 
 	wait_par( cpus )
 
+	print("\n ==== RUNNNING HISAT2 !!! =====")
+
 	tid := task( out<-in ) {
 
 		sys $shcmd_init
 
+		/*
 		sys bowtie2 $param -X2000 --mm --threads $nth_bwt2 -x $bwt2_idx \
 			-1 $fastq1 -2 $fastq2 2>$log | \
 			samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
+		*/
+
+		sys hisat2 $param -p $nth_bwt2 -f -q -x /usit/abel/u1/ivargry/dev/hisat2/hg38/genome -1 $fastq1 -2 $fastq2 2>$log | \
+                        samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
 
 		sys $shcmd_finalize
 	}

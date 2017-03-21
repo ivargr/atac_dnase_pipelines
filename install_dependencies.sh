@@ -2,6 +2,8 @@
 # Stop on error
 set -e
 
+echo "Start"
+
 ## conda environment name
 
 ENV_NAME=bds_atac
@@ -13,8 +15,12 @@ INSTALL_WIGGLER_AND_MCR=0
 
 ## install packages from official channels (bioconda and r)
 
+echo "Start 2"
+
 conda create -n ${ENV_NAME} --file requirements.txt -y -c defaults -c bioconda -c r
 conda create -n ${ENV_NAME_PY3} --file requirements_py3.txt -y -c defaults -c bioconda -c r
+
+echo "Here"
 
 ### bash function definition
 
@@ -30,6 +36,8 @@ function add_to_activate {
 }
 
 ## install useful tools for BigDataScript
+
+echo "Here 2"
 
 mkdir -p $HOME/.bds
 cp --remove-destination ./utils/bds_scr ./utils/bds_scr_5min ./utils/kill_scr bds.config $HOME/.bds/
