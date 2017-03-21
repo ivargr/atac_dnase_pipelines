@@ -7,9 +7,9 @@ include "module_template.bds"
 
 
 help == align bowtie2 settings (requirements: -bwt2_idx)
-
-wt_bwt2		:= "23h"		help Walltime for bowtie2 (default: 23h, 23:00:00).
-mem_bwt2	:= "12G"	 	help Max. memory for bowtie2 (default: 12G).
+bwt2_idx	:= ""		help Bowtie2 index (full path prefix of *.1.bt2 file).
+wt_bwt2		:= "47h"	help Walltime for bowtie2 (default: 47h, 47:00:00).
+mem_bwt2	:= "12G"	help Max. memory for bowtie2 (default: 12G).
 
 
 grp_color_bwt2		:= "salmon"
@@ -20,10 +20,12 @@ init_align_bwt2()
 
 void init_align_bwt2() {
 
-	wt_bwt2 	= get_conf_val( wt_bwt2, 		["wt_bwt2"] )
-	mem_bwt2 	= get_conf_val( mem_bwt2, 		["mem_bwt2"] )
+	bwt2_idx 	= get_conf_val( bwt2_idx, 	["bwt2_idx"] )
+	wt_bwt2 	= get_conf_val( wt_bwt2, 	["wt_bwt2"] )
+	mem_bwt2 	= get_conf_val( mem_bwt2,	["mem_bwt2"] )
 
 	print("\n\n== align bowtie2 settings\n")
+	print( "Bowtie2 index\t\t\t: $bwt2_idx\n" )
 	print( "Walltime (bowtie2)\t\t: $wt_bwt2\n")
 	print( "Max. memory (bowtie2)\t\t: $mem_bwt2\n")
 }
@@ -59,8 +61,18 @@ string[] bowtie2( string fastq, string o_dir, string log_o_dir, string group, in
 		sys bowtie2 $param -x $bwt2_idx --threads $nth_bwt2 -U <(zcat -f $fastq) 2> $log | \
 			samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
 		*/
-	        sys hisat2 -p $nth_bwt2 -f -q -x /usit/abel/u1/ivargry/dev/hisat2/hg38/genome -U <(zcat -f $fastq) 2> $log | \
+	        sys hisat2 -p $nth_bwt2 -f -q -x /home/pipeline/hisat2/hg38/genome -U <(zcat -f $fastq) 2> $log | \
 			samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
+
+
+		// ORIGINAL CODE:
+		/*
+		sys bowtie2 $param -x $bwt2_idx --threads $nth_bwt2 -U <(zcat -f $fastq) 2> $log | \
+			samtools view -Su /dev/stdin | samtools sort - $prefix
+		*/
+
+		// New from pull:
+		sys samtools index $bam
 
 		sys $shcmd_finalize
 	}
@@ -143,8 +155,11 @@ string[] bowtie2_PE( string fastq1, string fastq2, string o_dir, string log_o_di
 			samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
 		*/
 
-		sys hisat2 $param -p $nth_bwt2 -f -q -x /usit/abel/u1/ivargry/dev/hisat2/hg38/genome -1 $fastq1 -2 $fastq2 2>$log | \
+		sys hisat2 $param -p $nth_bwt2 -f -q -x /home/pipeline/hisat2/hg38/genome -1 $fastq1 -2 $fastq2 2>$log | \
                         samtools view -Su /dev/stdin | sambamba sort -t 1 /dev/stdin -o $bam
+
+		sys samtools index $bam
+
 
 		sys $shcmd_finalize
 	}

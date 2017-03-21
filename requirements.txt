@@ -13,13 +13,14 @@ ucsc-bedgraphtobigwig
 ucsc-bigwiginfo
 ucsc-bedclip
 ucsc-bigWigAverageOverBed
+ucsc-bedtobigbed
+ucsc-twobittofa
 macs2 ==2.1.0
 boost ==1.57.0
-gnuplot ==5.0.3
+gnuplot #==5.0.3
 numpy ==1.10.2 #1.9.0, 1.8.2 conflicts with ATAQC
 scipy ==0.17.0 
 matplotlib
-pybedtools # ataqc
 libgfortran==3.0 # ataqc
 pandas ==0.18.0 #==0.16.1 # ataqc
 metaseq #==0.5.6 # ataqc
@@ -27,8 +28,9 @@ jinja2 # ataqc
 graphviz==2.38.0
 libtool
 ghostscript # pdf2png
-#gsl # for preseq
-pysam ==0.8.3 # 0.9 has an issue with ATAQC
+gsl # for preseq
+pysam==0.8.2.1 # 0.8.3, 0.9 from bioconda has an issue with ATAQC (segmentation fault), need to use -c bcbio
+pybedtools==0.6.9 # same issue as in pysam
 pigz
 zlib
 sambamba ==0.6.5 # to fix seg fault error in 0.6.1
@@ -39,7 +41,9 @@ r-bitops
 r-catools
 bioconductor-rsamtools
 r-spp ==1.13
-cutadapt
-#preseq ==2.0.2 
+cutadapt ==1.9.1
+preseq ==2.0.2 
 trim-galore ==0.4.1 # for old trimmer
 python-levenshtein # for old trimmer (trimAdapter.py)
+#glibc #segmentation fault in conda with openssl
+pyfaidx ==0.4.7.1

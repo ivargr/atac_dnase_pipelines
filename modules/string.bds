@@ -106,22 +106,22 @@ string get_common_basename( string f1, string f2 ) {
 	return common
 }
 
-string concat_basename_wo_ext( string file1, string file2, string[] exts1, string[] exts2 ) {
+string merge_basename_wo_ext( string file1, string file2, string[] exts1, string[] exts2 ) {
 	base1_wo_ext := rm_ext( get_basename( file1 ), exts1 )
 	base2_wo_ext := rm_ext( get_basename( file2 ), exts2 )	
 	return base1_wo_ext + "_" + base2_wo_ext
 }
 
-string concat_basename_wo_ext( string file1, string file2, string[] exts ) {
-	return concat_basename_wo_ext( file1, file2, exts, exts )
+string merge_basename_wo_ext( string file1, string file2, string[] exts ) {
+	return merge_basename_wo_ext( file1, file2, exts, exts )
 }
 
-string concat_basename_wo_ext( string file1, string file2, string ext1, string ext2 ) {
-	return concat_basename_wo_ext( file1, file2, [ext1], [ext2] )
+string merge_basename_wo_ext( string file1, string file2, string ext1, string ext2 ) {
+	return merge_basename_wo_ext( file1, file2, [ext1], [ext2] )
 }
 
-string concat_basename_wo_ext( string file1, string file2, string ext ) {
-	return concat_basename_wo_ext( file1, file2, [ext], [ext] )
+string merge_basename_wo_ext( string file1, string file2, string ext ) {
+	return merge_basename_wo_ext( file1, file2, [ext], [ext] )
 }
 
 string make_vs_basename_wo_gz( string file1, string file2, string suffix ) {
@@ -152,13 +152,40 @@ string make_x_basename_wo_gz( string file1, string file2, string suffix ) {
 
 string array_to_str( string[] arr, string delim ) {
 	string ret
-	for ( string str : arr ) ret = ret + str + delim	
+	cnt := 0
+	for ( string str : arr ) {
+		cnt += 1
+		ret += (str + (cnt == arr.size() ? "" : delim))
+	}
 	return ret
 }
 
 string array_to_str( string[] arr ) {
-	return array_to_str( arr, "\n")
+	return array_to_str( arr, "\n" )
 }
+
+string map_to_json_str( string{} map ) { // like JSON
+	ret := "{\n"
+	cnt := 0
+	for ( string key : map.keys() ) {
+		cnt += 1
+		val := map{key}
+		comma :=  cnt == map.size() ? "" : ","
+		ret += ("\t\"" + key + '" : "' + val + "\""+comma+"\n")
+	}
+	ret += "}\n"
+	return ret
+}
+
+string map_to_conf_str( string{} map ) { // like JSON
+	ret := ""
+	for ( string key : map.keys() ) {
+		val := map{key}
+		ret += "$key = $val\n"
+	}
+	return ret
+}
+
 
 bool is_in_array( string str, string[] arr ) { // case-insensitive
 	for( string val : arr ) \
@@ -167,14 +194,14 @@ bool is_in_array( string str, string[] arr ) { // case-insensitive
 	return false
 }
 
-string[] concat( string[] s1, string[] s2 ) {
+string[] merge( string[] s1, string[] s2 ) {
 	string[] ret	
 	for ( string str : s1 ) ret.add(str)
 	for ( string str : s2 ) ret.add(str)
 	return ret
 }
 
-string[] concat( string[] s1, string[] s2, string[] s3 ) {
+string[] merge( string[] s1, string[] s2, string[] s3 ) {
 	string[] ret	
 	for ( string str : s1 ) ret.add(str)
 	for ( string str : s2 ) ret.add(str)
@@ -182,7 +209,7 @@ string[] concat( string[] s1, string[] s2, string[] s3 ) {
 	return ret
 }
 
-string[] concat( string[] s1, string[] s2, string[] s3, string[] s4 ) {
+string[] merge( string[] s1, string[] s2, string[] s3, string[] s4 ) {
 	string[] ret	
 	for ( string str : s1 ) ret.add(str)
 	for ( string str : s2 ) ret.add(str)
@@ -191,10 +218,34 @@ string[] concat( string[] s1, string[] s2, string[] s3, string[] s4 ) {
 	return ret
 }
 
+string{} merge( string{} a, string{} b ) {
+	string{} ret = a
+	for ( string key : b ) {
+		ret{key} = b{key}
+	}
+	return ret
+}
+
 string[] map_to_array( string{} map ) {
 	string[] array
 	for ( string str : map ) array.add( str )
 	return array
+}
+
+// returns an array of length 2
+string[] split_by_first_chr( string s, string delim ) {
+	string[] result
+	if ( s.indexOf(delim) < 0 ) {
+		// error("delimiter ($delim) does not exists in the target string ($s)")
+		result.add(s)
+	}
+	else {
+		key := s.substr(0,s.indexOf(delim))
+		desc := s.substr(s.indexOf(delim)+1)
+		result.add(key)
+		result.add(desc)
+	}
+	return result
 }
 
 //// string parsing functions

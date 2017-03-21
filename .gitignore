@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 *.dag.js
 *report.html
 atac.bds.*parallel*
+=======
+*.chp
+.*.swp
+.nfs*
+>>>>>>> 9ea6309fb5e4350bf6a34ff517ea7d50de5e9c88

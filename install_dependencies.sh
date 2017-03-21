@@ -15,10 +15,8 @@ INSTALL_WIGGLER_AND_MCR=0
 
 ## install packages from official channels (bioconda and r)
 
-echo "Start 2"
-
-conda create -n ${ENV_NAME} --file requirements.txt -y -c defaults -c bioconda -c r
-conda create -n ${ENV_NAME_PY3} --file requirements_py3.txt -y -c defaults -c bioconda -c r
+conda create -n ${ENV_NAME} --file requirements.txt -y -c daler -c asmeurer -c defaults -c bioconda -c bcbio -c r
+conda create -n ${ENV_NAME_PY3} --file requirements_py3.txt -y -c daler -c asmeurer -c defaults -c bioconda -c bcbio -c r 
 
 echo "Here"
 
@@ -60,14 +58,14 @@ mkdir -p $CONDA_EXTRA $CONDA_ACTIVATE_D
 cd $CONDA_EXTRA
 git clone https://github.com/kundajelab/phantompeakqualtools
 chmod 755 -R phantompeakqualtools
-CONTENTS=("export PATH=\$PATH:$CONDA_EXTRA/phantompeakqualtools")
+CONTENTS=("export PATH=$CONDA_EXTRA/phantompeakqualtools:\$PATH")
 add_to_activate
 
 if [ ${INSTALL_WIGGLER_AND_MCR} == 1 ]; then
   conda install -y -c conda-forge bc
   ### install Wiggler (for generating signal tracks)
   cd $CONDA_EXTRA
-  wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/align2rawsignal/align2rawsignal.2.0.tgz -N
+  wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/align2rawsignal/align2rawsignal.2.0.tgz -N --no-check-certificate
   tar zxvf align2rawsignal.2.0.tgz
   rm -f align2rawsignal.2.0.tgz
   CONTENTS=("export PATH=\$PATH:$CONDA_EXTRA/align2rawsignal/bin")
@@ -75,7 +73,8 @@ if [ ${INSTALL_WIGGLER_AND_MCR} == 1 ]; then
 
   ### install MCR (560MB)
   cd $CONDA_EXTRA
-  wget https://personal.broadinstitute.org/anshul/softwareRepo/MCR2010b.bin -N
+  wget http://mitra.stanford.edu/kundaje/software/MCR2010b.bin -N --no-check-certificate
+  #wget https://personal.broadinstitute.org/anshul/softwareRepo/MCR2010b.bin -N --no-check-certificate
   chmod 755 MCR2010b.bin
   echo '-P installLocation="'${CONDA_EXTRA}'/MATLAB_Compiler_Runtime"' > tmp.stdin
   ./MCR2010b.bin -silent -options "tmp.stdin"
